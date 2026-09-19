@@ -1,8 +1,8 @@
 package hilos;
 
-import sistema.CentroLogistico;
 import modelo.EstadoPaquete;
 import modelo.Paquete;
+import sistema.CentroLogistico;
 
 public class AlmacenThread extends Thread {
 
@@ -24,12 +24,11 @@ public class AlmacenThread extends Thread {
                 Paquete p = c.recepcion.extraerMejor(x -> true);
 
                 p.setEstado(EstadoPaquete.ALMACENADO);
-
                 c.almacen.agregar(p);
 
-                c.log(p.getCodigo() + " almacenado");
+                c.log(p.getCodigo() + " ingresó al almacén");
 
-                Thread.sleep(800);
+                Thread.sleep(400);
 
             } catch (InterruptedException e) {
                 break;

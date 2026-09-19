@@ -56,7 +56,7 @@ public class RecepcionThread extends Thread {
 
                 c.log(p.getCodigo() + " recibido");
 
-                Thread.sleep(1200 + r.nextInt(1000));
+                Thread.sleep(500 + r.nextInt(300));
 
             } catch (InterruptedException e) {
                 break;

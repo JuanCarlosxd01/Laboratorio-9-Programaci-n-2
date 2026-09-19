@@ -8,7 +8,6 @@ public class EmpaquetadorThread extends Thread {
 
     private final CentroLogistico c;
     private final int ciclo;
-
     private volatile String procesando = "-";
 
     public EmpaquetadorThread(CentroLogistico c, int n, int ciclo) {
@@ -38,11 +37,11 @@ public class EmpaquetadorThread extends Thread {
                 long tiempo;
 
                 if (p.getPeso() <= 2) {
-                    tiempo = 1500;
+                    tiempo = 1000;
                 } else if (p.getPeso() <= 5) {
-                    tiempo = 2500;
+                    tiempo = 2000;
                 } else {
-                    tiempo = 3500;
+                    tiempo = 3000;
                 }
 
                 Thread.sleep(tiempo);
@@ -52,7 +51,7 @@ public class EmpaquetadorThread extends Thread {
 
                 c.expedicion.agregar(p);
 
-                c.log(p.getCodigo() + " empaquetado");
+                c.log(p.getCodigo() + " terminó de ser empaquetado");
 
                 procesando = "-";
 

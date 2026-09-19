@@ -53,7 +53,7 @@ public class ClasificadorThread extends Thread {
 
                 c.log(p.getCodigo() + " tomado por " + getName());
 
-                Thread.sleep(1800);
+                Thread.sleep(2500);
 
                 c.clasificacion.eliminar(p);
 
