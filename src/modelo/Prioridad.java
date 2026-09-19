@@ -1,7 +1,9 @@
 
 package modelo;
 
-
-public class Prioridad {
-
+public enum Prioridad { 
+    URGENTE, 
+    ALTA, 
+    NORMAL, 
+    BAJA 
 }
