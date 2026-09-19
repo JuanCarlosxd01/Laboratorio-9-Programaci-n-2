@@ -1,16 +1,20 @@
-
 package hilos;
 
 import sistema.CentroLogistico;
-import modelo.*;
+import modelo.EstadoPaquete;
+import modelo.Paquete;
 
 public class ClasificadorThread extends Thread {
 
     private final CentroLogistico c;
+    private final int ciclo;
 
-    public ClasificadorThread(CentroLogistico c, int n) {
+    private volatile String procesando = "-";
+
+    public ClasificadorThread(CentroLogistico c, int n, int ciclo) {
         super("Clasificador-" + n);
         this.c = c;
+        this.ciclo = ciclo;
     }
 
     private String ruta(String ciudad) {
@@ -29,20 +33,27 @@ public class ClasificadorThread extends Thread {
         return "Ruta 4";
     }
 
+    public String getProcesando() {
+        return procesando;
+    }
+
     @Override
     public void run() {
-        while (c.isActivo()) {
+        while (c.perteneceAlCiclo(ciclo)) {
             try {
                 c.esperarSiPausado();
 
                 Paquete p = c.almacen.extraerMejor(x -> true);
 
+                procesando = p.getCodigo();
+
                 p.setEstado(EstadoPaquete.CLASIFICANDO);
+
                 c.clasificacion.agregar(p);
 
                 c.log(p.getCodigo() + " tomado por " + getName());
 
-                Thread.sleep(700);
+                Thread.sleep(1800);
 
                 c.clasificacion.eliminar(p);
 
@@ -53,7 +64,10 @@ public class ClasificadorThread extends Thread {
 
                 c.log(p.getCodigo() + " clasificado → " + p.getRutaAsignada());
 
+                procesando = "-";
+
             } catch (InterruptedException e) {
+                procesando = "-";
                 break;
             }
         }

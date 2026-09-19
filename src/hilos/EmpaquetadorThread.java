@@ -1,48 +1,63 @@
 package hilos;
 
 import sistema.CentroLogistico;
-import modelo.*;
+import modelo.EstadoPaquete;
+import modelo.Paquete;
 
 public class EmpaquetadorThread extends Thread {
 
     private final CentroLogistico c;
+    private final int ciclo;
 
-    public EmpaquetadorThread(CentroLogistico c, int n) {
+    private volatile String procesando = "-";
+
+    public EmpaquetadorThread(CentroLogistico c, int n, int ciclo) {
         super("Empaquetador-" + n);
         this.c = c;
+        this.ciclo = ciclo;
+    }
+
+    public String getProcesando() {
+        return procesando;
     }
 
     @Override
     public void run() {
-        while (c.isActivo()) {
+        while (c.perteneceAlCiclo(ciclo)) {
             try {
                 c.esperarSiPausado();
 
                 Paquete p = c.empaquetado.extraerMejor(x -> true);
 
+                procesando = p.getCodigo();
+
                 p.setEstado(EstadoPaquete.EMPAQUETANDO);
 
                 c.log(getName() + " empaquetando " + p.getCodigo());
 
-                long t;
+                long tiempo;
 
                 if (p.getPeso() <= 2) {
-                    t = 1000;
+                    tiempo = 1500;
                 } else if (p.getPeso() <= 5) {
-                    t = 2000;
+                    tiempo = 2500;
                 } else {
-                    t = 3000;
+                    tiempo = 3500;
                 }
 
-                Thread.sleep(t);
+                Thread.sleep(tiempo);
 
                 p.setEstado(EstadoPaquete.EMPAQUETADO);
+                p.setEstado(EstadoPaquete.EN_EXPEDICION);
 
                 c.expedicion.agregar(p);
 
                 c.log(p.getCodigo() + " empaquetado");
 
+                procesando = "-";
+
             } catch (InterruptedException e) {
+                procesando = "-";
                 break;
             }
         }

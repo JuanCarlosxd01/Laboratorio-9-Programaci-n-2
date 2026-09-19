@@ -1,66 +1,138 @@
+package sistema;
 
-package sistema; 
-import hilos.*;
-import java.util.ArrayList; 
-import java.util.List;
+import hilos.AlmacenThread;
+import hilos.ClasificadorThread;
+import hilos.EmpaquetadorThread;
+import hilos.RecepcionThread;
+import hilos.RepartidorThread;
 
+public class Simulador {
 
-public class Simulador { 
-    
-    private final CentroLogistico c; 
-    private final List<Thread> hilos=new ArrayList<>();
-    
-    public Simulador(CentroLogistico c){
-        this.c=c;
-    } 
-    
-    public synchronized void iniciar(){
-        if(c.isActivo()){
+    private final CentroLogistico c;
+
+    private RecepcionThread recepcion;
+    private AlmacenThread almacen;
+
+    private ClasificadorThread[] clasificadores;
+    private EmpaquetadorThread[] empaquetadores;
+    private RepartidorThread[] repartidores;
+
+    public Simulador(CentroLogistico c) {
+        this.c = c;
+    }
+
+    public synchronized void iniciar() {
+        if (c.isActivo()) {
             return;
         }
-        c.setActivo(true);
-        c.setPausado(false);
-        hilos.clear();
-        hilos.add(new RecepcionThread(c));
-        hilos.add(new AlmacenThread(c));
-        for(int i=1;i<=3;i++){
-            hilos.add(new ClasificadorThread(c,i));
+
+        int ciclo = c.iniciarNuevoCiclo();
+
+        recepcion = new RecepcionThread(c, ciclo);
+        almacen = new AlmacenThread(c, ciclo);
+
+        clasificadores = new ClasificadorThread[3];
+
+        for (int i = 0; i < clasificadores.length; i++) {
+            clasificadores[i] = new ClasificadorThread(c, i + 1, ciclo);
         }
-        
-        for(int i=1;i<=2;i++){
-            hilos.add(new EmpaquetadorThread(c,i));
+
+        empaquetadores = new EmpaquetadorThread[2];
+
+        for (int i = 0; i < empaquetadores.length; i++) {
+            empaquetadores[i] = new EmpaquetadorThread(c, i + 1, ciclo);
         }
-        
-        int[] caps={5,4,6,5};
-        
-        for(int i=0;i<4;i++){
-            hilos.add(new RepartidorThread(c,i+1,caps[i]));
+
+        repartidores = new RepartidorThread[4];
+
+        repartidores[0] = new RepartidorThread(c, 1, 5, "Ruta 1", ciclo);
+        repartidores[1] = new RepartidorThread(c, 2, 4, "Ruta 2", ciclo);
+        repartidores[2] = new RepartidorThread(c, 3, 6, "Ruta 3", ciclo);
+        repartidores[3] = new RepartidorThread(c, 4, 5, "Ruta 4", ciclo);
+
+        recepcion.start();
+        almacen.start();
+
+        for (ClasificadorThread clasificador : clasificadores) {
+            clasificador.start();
         }
-        hilos.forEach(Thread::start);
+
+        for (EmpaquetadorThread empaquetador : empaquetadores) {
+            empaquetador.start();
+        }
+
+        for (RepartidorThread repartidor : repartidores) {
+            repartidor.start();
+        }
+
         c.log("Simulación iniciada");
-    } 
-    
-    public void pausar(){
-        c.setPausado(true);
+    }
+
+    public void pausar() {
+        c.pausar();
         c.log("Simulación pausada");
-    } 
-    
-    public void reanudar(){
-        c.setPausado(false);
+    }
+
+    public void reanudar() {
+        c.reanudar();
         c.log("Simulación reanudada");
-    } 
-    
-    public synchronized void detener(){
-        c.setActivo(false);
-        c.setPausado(false);
-        hilos.forEach(Thread::interrupt);
-        hilos.clear();
+    }
+
+    public synchronized void detener() {
+        c.detener();
+
+        interrumpirHilos();
+
         c.log("Simulación detenida");
-    } 
-    
-    public void reiniciar(){
+    }
+
+    public synchronized void reiniciar() {
         detener();
+
         c.limpiar();
+
         iniciar();
+
+        c.log("Simulación reiniciada");
+    }
+
+    private void interrumpirHilos() {
+        if (recepcion != null) {
+            recepcion.interrupt();
+        }
+
+        if (almacen != null) {
+            almacen.interrupt();
+        }
+
+        if (clasificadores != null) {
+            for (ClasificadorThread clasificador : clasificadores) {
+                clasificador.interrupt();
+            }
+        }
+
+        if (empaquetadores != null) {
+            for (EmpaquetadorThread empaquetador : empaquetadores) {
+                empaquetador.interrupt();
+            }
+        }
+
+        if (repartidores != null) {
+            for (RepartidorThread repartidor : repartidores) {
+                repartidor.interrupt();
+            }
+        }
+    }
+
+    public ClasificadorThread[] getClasificadores() {
+        return clasificadores;
+    }
+
+    public EmpaquetadorThread[] getEmpaquetadores() {
+        return empaquetadores;
+    }
+
+    public RepartidorThread[] getRepartidores() {
+        return repartidores;
     }
 }
